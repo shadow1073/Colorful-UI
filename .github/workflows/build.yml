@@ -20,6 +20,16 @@ jobs:
         with:
           dotnet-version: "6.0.x"
 
+      - name: Pin BepInEx version
+        run: |
+          cat > Directory.Build.props << 'EOF'
+          <Project>
+            <ItemGroup>
+              <PackageReference Update="BepInEx.Unity.IL2CPP" Version="6.0.0-be.692" />
+            </ItemGroup>
+          </Project>
+          EOF
+
       - name: Restore
         run: dotnet restore
 
@@ -38,3 +48,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: bin/Release/net6.0/ColorfulUI.dll
+          
