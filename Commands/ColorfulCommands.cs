@@ -12,6 +12,7 @@ public static class ColorfulCommands
     private static ConfigEntry<string>? _prefix;
     private static string Prefix => _prefix?.Value ?? "/";
 
+    // tracks who the local player muted this session - doesnt persist, intentionally
     private static readonly HashSet<byte> _mutedPlayers = new();
 
     public static void Init(ConfigFile cfg)
@@ -36,7 +37,7 @@ public static class ColorfulCommands
         switch (command)
         {
             case "/info":
-                SendLocal($"ColorfulUI {ColorfulPlugin.Version} - use /themes to see all themes");
+                SendLocal($"ColorfulUI {ColorfulPlugin.Version} - use /themes to list themes");
                 return true;
 
             case "/themes":
@@ -84,6 +85,7 @@ public static class ColorfulCommands
                 if (tokens.Length < 2) { SendLocal("Usage: /kick <name|id>"); return true; }
                 var kickTarget = FindPlayer(tokens[1]);
                 if (kickTarget == null) { SendLocal("player not found"); return true; }
+                // OwnerId is the client id now - GetClientId() was removed in 2025.10.14
                 AmongUsClient.Instance!.KickPlayer(kickTarget.OwnerId, false);
                 SendLocal($"kicked {kickTarget.Data?.PlayerName}");
                 return true;
@@ -101,10 +103,7 @@ public static class ColorfulCommands
                 if (!host) { SendLocal("host only"); return true; }
                 var title = tokens.Length < 2 ? "" : string.Join(" ", tokens[1..]);
                 LobbyTitle.Set(title);
-                if (string.IsNullOrEmpty(title))
-                    SendLocal("title cleared");
-                else
-                    SendLocal($"title -> {title}");
+                SendLocal(string.IsNullOrEmpty(title) ? "title cleared" : $"title -> {title}");
                 return true;
 
             case "/reset":
@@ -158,6 +157,9 @@ public static class ColorfulCommands
         }
     }
 
+    // AddLocalChat is gone in 2025.10.14 - AddChat sends to everyone but
+    // using LocalPlayer as the source makes it look like a self-message,
+    // close enough for feedback messages
     private static void SendLocal(string text)
     {
         if (HudManager.Instance?.Chat == null) return;
