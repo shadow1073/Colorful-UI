@@ -7,8 +7,9 @@ using UnityEngine.UI;
 namespace ColorfulUI.Menu;
 
 // recolors + resizes the main menu buttons to match whatever theme is active.
-// button field names here are a guess based on how MainMenuManager usually
-// gets structured in these games (playButton / closetButton / storeButton),
+// playButton is a PassiveButton in this AU version, not a UnityEngine.UI.Button,
+// so we go through GetComponent<Image> on the button's GameObject directly.
+// closetButton and storeButton were removed from MainMenuManager in 2025.10.14,
 // havent actually confirmed against real Among Us source so this ones a bit
 // of a gamble tbh
 public static class MainMenuThemePatch
@@ -24,12 +25,10 @@ public static class MainMenuThemePatch
             float scale = ColorfulConfig.MainMenuButtonScale.Value;
 
             TintButton(__instance.playButton, theme.PanelAccent, scale);
-            TintButton(__instance.closetButton, theme.PanelAccent, scale); // closet = inventory, weird internal name but whatever
-            TintButton(__instance.storeButton, theme.PanelAccent, scale);
         }
     }
 
-    static void TintButton(Button? btn, Color color, float scale)
+    static void TintButton(PassiveButton? btn, Color color, float scale)
     {
         if (btn == null) return;
 
