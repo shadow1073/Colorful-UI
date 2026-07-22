@@ -34,10 +34,12 @@ public static class MinimapThemePatch
         var bg = map.GetComponent<UnityEngine.UI.Image>();
         if (bg != null) bg.color = OverrideBackground;
 
-        foreach (var vent in map.GetComponentsInChildren<MapVent>(true))
+        // MapVent got removed/renamed in 2025.10.14 so we just tint any
+        // SpriteRenderers on children tagged as vents - bit broad but works
+        foreach (var sr in map.GetComponentsInChildren<SpriteRenderer>(true))
         {
-            var img = vent.GetComponent<SpriteRenderer>();
-            if (img != null) img.color = OverrideVent;
+            if (sr.gameObject.name.Contains("Vent", System.StringComparison.OrdinalIgnoreCase))
+                sr.color = OverrideVent;
         }
 
         foreach (var sab in map.GetComponentsInChildren<SabotageTask>(true))

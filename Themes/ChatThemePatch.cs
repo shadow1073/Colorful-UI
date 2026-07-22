@@ -43,7 +43,8 @@ public static class ChatThemePatch
         var bg = chat.GetComponent<UnityEngine.UI.Image>();
         if (bg != null) bg.color = OverrideBackground;
 
-        foreach (var bubble in chat.chatBubPool.GetAllObjects())
+        // iterate existing bubble objects directly instead of going through the pool
+        foreach (var bubble in chat.GetComponentsInChildren<ChatBubble>(true))
         {
             if (bubble == null) continue;
             var texts = bubble.GetComponentsInChildren<TMPro.TextMeshPro>(true);
