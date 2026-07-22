@@ -3,9 +3,15 @@ using TMPro;
 
 namespace ColorfulUI;
 
+// sets a custom display title in the lobby screen.
+// GameRoomName and GetGameCode() are both gone in 2025.10.14 so we
+// just find the TMP by crawling children and only touch it when
+// there's actually a custom title to show - if title is empty we
+// restore whatever the game originally had there.
 public static class LobbyTitle
 {
     private static string _title = "";
+    private static string _originalText = "";   // remembered on first apply so we can restore it
 
     public static void Set(string title)
     {
@@ -13,34 +19,40 @@ public static class LobbyTitle
         Apply();
     }
 
-    private static void Apply()
+    private static TextMeshPro? FindLabel()
     {
-        if (GameStartManager.Instance == null) return;
+        if (GameStartManager.Instance == null) return null;
 
-        // GameRoomName field was renamed/removed in 2025.10.14 so we find
-        // the label by searching children for a TMP with "room" or "code" in
-        // the name - fragile but the best we can do without the actual field
-        TextMeshPro? label = null;
         foreach (var tmp in GameStartManager.Instance.GetComponentsInChildren<TextMeshPro>(true))
         {
             var n = tmp.gameObject.name.ToLowerInvariant();
             if (n.Contains("room") || n.Contains("code") || n.Contains("name"))
-            {
-                label = tmp;
-                break;
-            }
+                return tmp;
         }
+        return null;
+    }
+
+    private static void Apply()
+    {
+        var label = FindLabel();
         if (label == null) return;
 
-        label.text = string.IsNullOrEmpty(_title)
-            ? GameCode.IntToGameName(AmongUsClient.Instance.GameId)
-            : _title;
+        // grab the game's original text the first time we see the label
+        if (string.IsNullOrEmpty(_originalText))
+            _originalText = label.text;
+
+        label.text = string.IsNullOrEmpty(_title) ? _originalText : _title;
     }
 
     [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.Start))]
     private static class StartPatch
     {
-        static void Postfix() => Apply();
+        // reset cached original each lobby so we dont carry stale text across games
+        static void Postfix()
+        {
+            _originalText = "";
+            Apply();
+        }
     }
 
     [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.Update))]
