@@ -84,7 +84,7 @@ public static class ColorfulCommands
                 if (tokens.Length < 2) { SendLocal("Usage: /kick <name|id>"); return true; }
                 var kickTarget = FindPlayer(tokens[1]);
                 if (kickTarget == null) { SendLocal("player not found"); return true; }
-                AmongUsClient.Instance!.KickPlayer(kickTarget.GetClientId(), false);
+                AmongUsClient.Instance!.KickPlayer(kickTarget.OwnerId, false);
                 SendLocal($"kicked {kickTarget.Data?.PlayerName}");
                 return true;
 
@@ -93,7 +93,7 @@ public static class ColorfulCommands
                 if (tokens.Length < 2) { SendLocal("Usage: /ban <name|id>"); return true; }
                 var banTarget = FindPlayer(tokens[1]);
                 if (banTarget == null) { SendLocal("player not found"); return true; }
-                AmongUsClient.Instance!.KickPlayer(banTarget.GetClientId(), true);
+                AmongUsClient.Instance!.KickPlayer(banTarget.OwnerId, true);
                 SendLocal($"banned {banTarget.Data?.PlayerName}");
                 return true;
 
@@ -161,6 +161,6 @@ public static class ColorfulCommands
     private static void SendLocal(string text)
     {
         if (HudManager.Instance?.Chat == null) return;
-        HudManager.Instance.Chat.AddLocalChat(text, "ColorfulUI");
+        HudManager.Instance.Chat.AddChat(PlayerControl.LocalPlayer, $"[ColorfulUI] {text}", false);
     }
 }
