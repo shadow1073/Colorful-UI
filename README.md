@@ -33,7 +33,7 @@ All toggles live in the mod's config, accessible through Starlight's settings me
 
 ## Requirements
 
-Built against MiraAPI, Reactor, and BepInEx.Unity.IL2CPP. Needs the Il2Cpp interop assemblies for Among Us Android to compile.
+Built against BepInEx.Unity.IL2CPP. Needs the Il2Cpp interop assemblies for Among Us Android to compile.
 
 ## Notes
 
