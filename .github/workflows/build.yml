@@ -22,11 +22,11 @@ jobs:
           dotnet-version: "6.0.x"
 
       - name: Restore dependencies
-        run: dotnet restore ColorfulUI/ColorfulUI.csproj --configfile ColorfulUI/nuget.config
+        run: dotnet restore ColorfulUI.csproj --configfile nuget.config
 
       - name: Build
         run: >
-          dotnet build ColorfulUI/ColorfulUI.csproj
+          dotnet build ColorfulUI.csproj
           --configuration Release
           --no-restore
 
@@ -34,11 +34,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ColorfulUI
-          path: ColorfulUI/bin/Release/net6.0/ColorfulUI.dll
+          path: bin/Release/net6.0/ColorfulUI.dll
           if-no-files-found: error
 
       - name: Attach DLL to release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: ColorfulUI/bin/Release/net6.0/ColorfulUI.dll
+          files: bin/Release/net6.0/ColorfulUI.dll
+          
