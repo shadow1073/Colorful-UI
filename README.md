@@ -1,6 +1,6 @@
 # ColorfulUI
 
-A client-side visual overhaul mod for Among Us, built on MiraAPI + Reactor for the Starlight launcher.
+A client-side visual overhaul mod for Among Us,for the Starlight launcher.
 
 ## What it does
 
