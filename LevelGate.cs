@@ -36,7 +36,7 @@ public static class LevelGate
             if (!IsActive) return;
             if (client?.Character == null) return;
 
-            int level = client.Character.Data.PlayerLevel;
+            int level = (int)client.Character.Data.PlayerLevel;
             if (level < _minLevel)
                 __instance.KickPlayer(client.Id, false);
         }
