@@ -38,4 +38,3 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: bin/Release/net6.0/ColorfulUI.dll
-          
