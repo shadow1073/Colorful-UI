@@ -7,11 +7,14 @@ namespace ColorfulUI.Patches;
 [HarmonyPatch(typeof(HudManager), nameof(HudManager.Awake))]
 public static class HudAwakePatch
 {
-    private static bool _registered;
+    private static bool _typesRegistered;
+    private static bool _overlaysSpawned;
 
     static void Postfix(HudManager __instance)
     {
-        if (!_registered)
+        // ClassInjector.RegisterTypeInIl2Cpp only needs to happen once ever,
+        // calling it again explodes, so guard it
+        if (!_typesRegistered)
         {
             KillCooldownHud.Register();
             MeetingTimerHud.Register();
@@ -20,8 +23,14 @@ public static class HudAwakePatch
             FpsMonitor.Register();
             VoteTallyOverlay.Register();
             AfkIndicator.Register();
-            _registered = true;
+            _typesRegistered = true;
         }
+
+        // HudManager.Awake fires on every scene load but the host GameObject
+        // is DontDestroyOnLoad so it sticks around - without this guard you'd
+        // end up with like 4 stacked copies of every overlay by midgame lol
+        if (_overlaysSpawned) return;
+        _overlaysSpawned = true;
 
         var host = new GameObject("ColorfulUI_Overlays");
         Object.DontDestroyOnLoad(host);
