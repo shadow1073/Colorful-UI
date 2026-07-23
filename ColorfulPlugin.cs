@@ -15,7 +15,7 @@ public sealed class ColorfulPlugin : BasePlugin
 {
     public const string Id = "starlight.colorfului";
     public const string Name = "ColorfulUI";
-    public const string Version = "1.1.0";
+    public const string Version = "1.2.0";
 
     public Harmony Harmony { get; } = new(Id);
 
@@ -30,6 +30,9 @@ public sealed class ColorfulPlugin : BasePlugin
         Accessibility.ColorblindMode.Init(Config);
         LevelGate.Init(Config);
         ColorfulCommands.Init(Config);
+        PlayerNotes.Init();
+        WordFilter.Init();
+
         Harmony.PatchAll();
     }
 }
