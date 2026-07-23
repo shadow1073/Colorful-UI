@@ -1,6 +1,6 @@
 # ColorfulUI
 
-A client-side visual overhaul mod for Among Us, for the Starlight launcher.
+A client-side visual overhaul and host tools mod for Among Us, for the Starlight launcher.
 
 ## What it does
 
