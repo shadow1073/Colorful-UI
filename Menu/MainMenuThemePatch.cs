@@ -2,16 +2,9 @@ using ColorfulUI.Settings;
 using ColorfulUI.Themes;
 using HarmonyLib;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace ColorfulUI.Menu;
 
-// recolors + resizes the main menu buttons to match whatever theme is active.
-// playButton is a PassiveButton in this AU version, not a UnityEngine.UI.Button,
-// so we go through GetComponent<Image> on the button's GameObject directly.
-// closetButton and storeButton were removed from MainMenuManager in 2025.10.14,
-// havent actually confirmed against real Among Us source so this ones a bit
-// of a gamble tbh
 public static class MainMenuThemePatch
 {
     [HarmonyPatch(typeof(MainMenuManager), nameof(MainMenuManager.Start))]
@@ -31,12 +24,13 @@ public static class MainMenuThemePatch
     static void TintButton(PassiveButton? btn, Color color, float scale)
     {
         if (btn == null) return;
+        
+        foreach (var sr in btn.GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            if (sr.color == Color.white)
+                sr.color = color;
+        }
 
-        var img = btn.GetComponent<Image>();
-        if (img != null) img.color = color;
-
-        // hard // this bit is ugly but it works - shrinking the whole rect
-        // instead of doing font/padding adjustments separately
         var rt = btn.GetComponent<RectTransform>();
         if (rt != null) rt.localScale = Vector3.one * scale;
     }
