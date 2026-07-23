@@ -9,101 +9,107 @@ namespace ColorfulUI.Commands;
 
 public static class ColorfulCommands
 {
-    private static ConfigEntry<string>? _prefix;
-    private static string Prefix => _prefix?.Value ?? "/";
+    static ConfigEntry<string>? _prefix;
+    static string Prefix => _prefix?.Value ?? "/";
 
-    // tracks who the local player muted this session - doesnt persist, intentionally
-    private static readonly HashSet<byte> _mutedPlayers = new();
+    // session mutes, dont persist on purpose
+    static readonly HashSet<byte> _muted = new();
 
     public static void Init(ConfigFile cfg)
     {
-        _prefix = cfg.Bind("Commands", "Prefix", "/", "command prefix char");
+        _prefix = cfg.Bind("Commands", "Prefix", "/", "command prefix");
     }
 
-    public static void ClearSession()
-    {
-        _mutedPlayers.Clear();
-    }
+    public static void ClearSession() => _muted.Clear();
 
     public static bool TryHandle(string raw)
     {
-        if (string.IsNullOrWhiteSpace(raw)) return false;
-        if (!raw.StartsWith(Prefix)) return false;
+        if (string.IsNullOrWhiteSpace(raw) || !raw.StartsWith(Prefix)) return false;
 
         var tokens = raw.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var command = tokens[0].ToLowerInvariant();
-        var host = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
+        var cmd = tokens[0].ToLower();
+        bool host = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
 
-        switch (command)
+        switch (cmd)
         {
             case "/info":
-                SendLocal($"ColorfulUI {ColorfulPlugin.Version} - use /themes to list themes");
+                Say($"ColorfulUI {ColorfulPlugin.Version} - /themes to list themes");
                 return true;
 
             case "/themes":
-                SendLocal("Themes: " + string.Join(", ", ThemeRegistry.All.ConvertAll(t => t.Name)));
+                Say("themes: " + string.Join(", ", ThemeRegistry.All.ConvertAll(t => t.Name)));
                 return true;
 
             case "/theme":
-                if (tokens.Length < 2) { SendLocal("Usage: /theme <name>"); return true; }
+                if (tokens.Length < 2) { Say("usage: /theme <name>"); return true; }
                 if (ThemeRegistry.TryApply(tokens[1]))
                 {
                     ColorfulConfig.ActiveThemeIndex.Value = ThemeRegistry.All.FindIndex(t =>
                         t.Name.Equals(tokens[1], StringComparison.OrdinalIgnoreCase));
-                    SendLocal($"theme: {tokens[1]}");
+                    Say($"theme -> {tokens[1]}");
                 }
-                else
-                    SendLocal("unknown theme, try /themes");
+                else Say("unknown theme, try /themes");
                 return true;
 
             case "/hud":
                 if (tokens.Length < 2 || !float.TryParse(tokens[1], out var hs))
-                { SendLocal("Usage: /hud <0.4-1.5>"); return true; }
+                { Say("usage: /hud <0.4-1.5>"); return true; }
                 HudScaler.SetScale(hs);
                 ColorfulConfig.HudScale.Value = hs;
-                SendLocal($"hud scale: {hs:F2}");
+                Say($"hud -> {hs:F2}");
                 return true;
 
             case "/mute":
-                if (tokens.Length < 2) { SendLocal("Usage: /mute <name|id>"); return true; }
-                var muteTarget = FindPlayer(tokens[1]);
-                if (muteTarget == null) { SendLocal("player not found"); return true; }
-                _mutedPlayers.Add(muteTarget.PlayerId);
-                SendLocal($"muted {muteTarget.Data?.PlayerName}");
+                if (tokens.Length < 2) { Say("usage: /mute <name|id>"); return true; }
+                var mp = FindPlayer(tokens[1]);
+                if (mp == null) { Say("player not found"); return true; }
+                _muted.Add(mp.PlayerId);
+                Say($"muted {mp.Data?.PlayerName}");
                 return true;
 
             case "/unmute":
-                if (tokens.Length < 2) { SendLocal("Usage: /unmute <name|id>"); return true; }
-                var unmuteTarget = FindPlayer(tokens[1]);
-                if (unmuteTarget == null) { SendLocal("player not found"); return true; }
-                _mutedPlayers.Remove(unmuteTarget.PlayerId);
-                SendLocal($"unmuted {unmuteTarget.Data?.PlayerName}");
+                if (tokens.Length < 2) { Say("usage: /unmute <name|id>"); return true; }
+                var ump = FindPlayer(tokens[1]);
+                if (ump == null) { Say("player not found"); return true; }
+                _muted.Remove(ump.PlayerId);
+                Say($"unmuted {ump.Data?.PlayerName}");
                 return true;
 
             case "/kick":
-                if (!host) { SendLocal("host only"); return true; }
-                if (tokens.Length < 2) { SendLocal("Usage: /kick <name|id>"); return true; }
-                var kickTarget = FindPlayer(tokens[1]);
-                if (kickTarget == null) { SendLocal("player not found"); return true; }
-                // OwnerId is the client id now - GetClientId() was removed in 2025.10.14
-                AmongUsClient.Instance!.KickPlayer(kickTarget.OwnerId, false);
-                SendLocal($"kicked {kickTarget.Data?.PlayerName}");
+                if (!host) { Say("host only"); return true; }
+                if (tokens.Length < 2) { Say("usage: /kick <name|id>"); return true; }
+                var kp = FindPlayer(tokens[1]);
+                if (kp == null) { Say("player not found"); return true; }
+                AmongUsClient.Instance!.KickPlayer(kp.OwnerId, false);
+                Say($"kicked {kp.Data?.PlayerName}");
                 return true;
 
             case "/ban":
-                if (!host) { SendLocal("host only"); return true; }
-                if (tokens.Length < 2) { SendLocal("Usage: /ban <name|id>"); return true; }
-                var banTarget = FindPlayer(tokens[1]);
-                if (banTarget == null) { SendLocal("player not found"); return true; }
-                AmongUsClient.Instance!.KickPlayer(banTarget.OwnerId, true);
-                SendLocal($"banned {banTarget.Data?.PlayerName}");
+                if (!host) { Say("host only"); return true; }
+                if (tokens.Length < 2) { Say("usage: /ban <name|id>"); return true; }
+                var bp = FindPlayer(tokens[1]);
+                if (bp == null) { Say("player not found"); return true; }
+                AmongUsClient.Instance!.KickPlayer(bp.OwnerId, true);
+                Say($"banned {bp.Data?.PlayerName}");
+                return true;
+
+            // kick with a reason that actually gets saved, unlike /kick
+            case "/kickr":
+                if (!host) { Say("host only"); return true; }
+                if (tokens.Length < 3) { Say("usage: /kickr <name|id> <reason>"); return true; }
+                var krp = FindPlayer(tokens[1]);
+                if (krp == null) { Say("player not found"); return true; }
+                string kreason = string.Join(" ", tokens[2..]);
+                AmongUsClient.Instance!.KickPlayer(krp.OwnerId, false);
+                KickLogger.Record(krp.Data?.PlayerName ?? "?", (int)(krp.Data?.PlayerLevel ?? 0), $"manual:{kreason}");
+                Say($"kicked {krp.Data?.PlayerName} ({kreason})");
                 return true;
 
             case "/title":
-                if (!host) { SendLocal("host only"); return true; }
-                var title = tokens.Length < 2 ? "" : string.Join(" ", tokens[1..]);
-                LobbyTitle.Set(title);
-                SendLocal(string.IsNullOrEmpty(title) ? "title cleared" : $"title -> {title}");
+                if (!host) { Say("host only"); return true; }
+                var t = tokens.Length < 2 ? "" : string.Join(" ", tokens[1..]);
+                LobbyTitle.Set(t);
+                Say(string.IsNullOrEmpty(t) ? "title cleared" : $"title -> {t}");
                 return true;
 
             case "/reset":
@@ -111,33 +117,130 @@ public static class ColorfulCommands
                 HudScaler.SetScale(0.90f);
                 ColorfulConfig.ActiveThemeIndex.Value = 0;
                 ColorfulConfig.HudScale.Value = 0.90f;
-                SendLocal("reset");
+                Say("reset to defaults");
                 return true;
 
             case "/prefix":
-                if (tokens.Length < 2) { SendLocal("Usage: /prefix <char>"); return true; }
+                if (tokens.Length < 2) { Say("usage: /prefix <char>"); return true; }
                 if (_prefix != null) _prefix.Value = tokens[1][0].ToString();
-                SendLocal($"prefix: '{tokens[1][0]}'");
+                Say($"prefix -> '{tokens[1][0]}'");
                 return true;
 
             case "/players":
-                ListPlayers();
+                foreach (var p in PlayerControl.AllPlayerControls)
+                {
+                    if (p?.Data == null) continue;
+                    Say($"[{p.PlayerId}] {p.Data.PlayerName} lv{p.Data.PlayerLevel} {(p.Data.IsDead ? "dead" : "alive")}");
+                }
                 return true;
 
-            //case "/reload":
-            //    ThemeRegistry.All.Clear();
-            //    ThemeRegistry.Init();
-            //    SendLocal($"reloaded {ThemeRegistry.All.Count} themes");
-            //    return true;
+            // sweep lobby and kick everyone under level N
+            // works even if levelgate auto kick is off
+            case "/kicklevel":
+                if (!host) { Say("host only"); return true; }
+                if (tokens.Length < 2 || !int.TryParse(tokens[1], out int thresh))
+                { Say("usage: /kicklevel <N>"); return true; }
+                int kicked = 0;
+                foreach (var p in PlayerControl.AllPlayerControls)
+                {
+                    if (p == null || p.Data == null || p.IsLocal) continue;
+                    int lvl = (int)p.Data.PlayerLevel;
+                    if (lvl < thresh)
+                    {
+                        AmongUsClient.Instance!.KickPlayer(p.OwnerId, false);
+                        KickLogger.Record(p.Data.PlayerName, lvl, $"manual:/kicklevel {thresh}");
+                        kicked++;
+                    }
+                }
+                Say(kicked == 0 ? $"nobody under level {thresh}" : $"kicked {kicked} under level {thresh}");
+                return true;
+
+            // /history = total count, /history name = that player's records
+            case "/history":
+                if (tokens.Length < 2)
+                {
+                    Say($"total kicks logged: {KickLogger.TotalCount()}");
+                    return true;
+                }
+                string hname = string.Join(" ", tokens[1..]);
+                var records = KickLogger.GetHistory(hname);
+                if (records.Count == 0) { Say($"no history for '{hname}'"); return true; }
+                Say($"--- {hname} ({records.Count} kicks) ---");
+                foreach (var r in records) Say(r);
+                return true;
+
+            // /autostart 0 turns it off
+            case "/autostart":
+                if (!host) { Say("host only"); return true; }
+                if (tokens.Length < 2 || !int.TryParse(tokens[1], out int acount))
+                {
+                    Say(AutoStart.IsArmed ? $"autostart armed at {AutoStart.Target}" : "autostart off  |  usage: /autostart <N>");
+                    return true;
+                }
+                if (acount <= 0) { AutoStart.Disable(); Say("autostart off"); }
+                else { AutoStart.Set(acount); Say($"autostart -> {acount} players"); }
+                return true;
+
+            // /note name = read, /note name text = write, /note name clear = delete
+            case "/note":
+                if (tokens.Length < 2) { Say("usage: /note <name> [text|clear]"); return true; }
+                string nname = tokens[1];
+                if (tokens.Length == 2)
+                {
+                    var existing = PlayerNotes.Get(nname);
+                    Say(existing == null ? $"no note for '{nname}'" : $"[{nname}] {existing}");
+                    return true;
+                }
+                string narg = string.Join(" ", tokens[2..]);
+                if (narg.Equals("clear", StringComparison.OrdinalIgnoreCase))
+                { PlayerNotes.Delete(nname); Say($"note for '{nname}' deleted"); }
+                else
+                { PlayerNotes.Set(nname, narg); Say($"note saved for '{nname}'"); }
+                return true;
+
+            // blast a message to the whole lobby
+            case "/announce":
+                if (!host) { Say("host only"); return true; }
+                if (tokens.Length < 2) { Say("usage: /announce <text>"); return true; }
+                string ann = string.Join(" ", tokens[1..]);
+                HudManager.Instance?.Chat?.AddChat(PlayerControl.LocalPlayer, $"[!] {ann}", true);
+                return true;
+
+            // /filter add, remove, list
+            case "/filter":
+                if (!host) { Say("host only"); return true; }
+                if (tokens.Length < 2) { Say("usage: /filter add|remove|list [word]"); return true; }
+                switch (tokens[1].ToLower())
+                {
+                    case "add":
+                        if (tokens.Length < 3) { Say("usage: /filter add <word>"); break; }
+                        WordFilter.Add(string.Join(" ", tokens[2..]));
+                        Say($"filter: added '{string.Join(" ", tokens[2..])}'");
+                        break;
+                    case "remove":
+                    case "rm":
+                        if (tokens.Length < 3) { Say("usage: /filter remove <word>"); break; }
+                        bool rm = WordFilter.Remove(string.Join(" ", tokens[2..]));
+                        Say(rm ? $"filter: removed '{string.Join(" ", tokens[2..])}'" : "not in filter");
+                        break;
+                    case "list":
+                        var all = WordFilter.All();
+                        Say(all.Count == 0 ? "filter is empty" : $"filter: {string.Join(", ", all)}");
+                        break;
+                    default:
+                        Say("usage: /filter add|remove|list [word]");
+                        break;
+                }
+                return true;
 
             default:
                 return false;
         }
     }
 
-    public static bool IsMuted(byte playerId) => _mutedPlayers.Contains(playerId);
+    public static bool IsMuted(byte id) => _muted.Contains(id);
 
-    private static PlayerControl? FindPlayer(string nameOrId)
+    static PlayerControl? FindPlayer(string nameOrId)
     {
         foreach (var p in PlayerControl.AllPlayerControls)
         {
@@ -148,19 +251,9 @@ public static class ColorfulCommands
         return null;
     }
 
-    private static void ListPlayers()
-    {
-        foreach (var p in PlayerControl.AllPlayerControls)
-        {
-            if (p?.Data == null) continue;
-            SendLocal($"[{p.PlayerId}] {p.Data.PlayerName} - {(p.Data.IsDead ? "dead" : "alive")}");
-        }
-    }
-
-    // AddLocalChat is gone in 2025.10.14 - AddChat sends to everyone but
-    // using LocalPlayer as the source makes it look like a self-message,
-    // close enough for feedback messages
-    private static void SendLocal(string text)
+    // feedback messages, only local player sees these
+    // AddLocalChat was removed in 2025.10.14 so we use AddChat with false
+    static void Say(string text)
     {
         if (HudManager.Instance?.Chat == null) return;
         HudManager.Instance.Chat.AddChat(PlayerControl.LocalPlayer, $"[ColorfulUI] {text}", false);
