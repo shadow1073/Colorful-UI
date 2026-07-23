@@ -59,7 +59,7 @@ public static class WordFilter
         static void Prefix(PlayerControl sourcePlayer, string chatText)
         {
             if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
-            if (sourcePlayer == null || sourcePlayer.IsLocal) return;
+            if (sourcePlayer == null || sourcePlayer == PlayerControl.LocalPlayer) return;
 
             var bad = Check(chatText);
             if (bad == null) return;

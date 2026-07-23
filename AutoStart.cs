@@ -30,9 +30,11 @@ public static class AutoStart
         int count = AmongUsClient.Instance.allClients.Count;
         if (count < _target) return;
 
-        // same as clicking the start button
-        if (GameStartManager.Instance != null)
-            GameStartManager.Instance.startButton.ReceiveClickDown();
+        // TODO: startButton isn't the real field name on GameStartManager -
+        // need to confirm the actual name before this can work. left
+        // disabled so the rest of the file still builds.
+        // if (GameStartManager.Instance != null)
+        //     GameStartManager.Instance.startButton.ReceiveClickDown();
 
         _target = 0; // disarm so it doesnt fire again
     }
