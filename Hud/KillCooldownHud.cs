@@ -23,7 +23,9 @@ public class KillCooldownHud : MonoBehaviour
         var player = PlayerControl.LocalPlayer;
         if (player == null || player.Data == null) return;
         if (!player.Data.Role.IsImpostor) return;
-        if (!GameData.Instance || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started) return;
+
+        if (GameData.Instance == null || AmongUsClient.Instance == null) return;
+        if (AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started) return;
 
         float cd = player.killTimer;
         if (cd <= 0f) return;
