@@ -143,7 +143,7 @@ public static class ColorfulCommands
                 int kicked = 0;
                 foreach (var p in PlayerControl.AllPlayerControls)
                 {
-                    if (p == null || p.Data == null || p.IsLocal) continue;
+                    if (p == null || p.Data == null || p == PlayerControl.LocalPlayer) continue;
                     int lvl = (int)p.Data.PlayerLevel;
                     if (lvl < thresh)
                     {
