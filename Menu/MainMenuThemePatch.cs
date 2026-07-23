@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace ColorfulUI.Menu;
 
+// recolors the main menu play button to match the active theme
 public static class MainMenuThemePatch
 {
     [HarmonyPatch(typeof(MainMenuManager), nameof(MainMenuManager.Start))]
@@ -24,7 +25,7 @@ public static class MainMenuThemePatch
     static void TintButton(PassiveButton? btn, Color color, float scale)
     {
         if (btn == null) return;
-        
+
         foreach (var sr in btn.GetComponentsInChildren<SpriteRenderer>(true))
         {
             if (sr.color == Color.white)
