@@ -40,15 +40,16 @@ public static class ChatThemePatch
 
     private static void ApplyToChat(ChatController chat)
     {
-        var bg = chat.GetComponent<UnityEngine.UI.Image>();
-        if (bg != null) bg.color = OverrideBackground;
+        foreach (var sr in chat.GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            if (sr.color == Color.white)
+                sr.color = OverrideBackground;
+        }
 
-        // iterate existing bubble objects directly instead of going through the pool
         foreach (var bubble in chat.GetComponentsInChildren<ChatBubble>(true))
         {
             if (bubble == null) continue;
-            var texts = bubble.GetComponentsInChildren<TMPro.TextMeshPro>(true);
-            foreach (var t in texts)
+            foreach (var t in bubble.GetComponentsInChildren<TMPro.TextMeshPro>(true))
                 t.color = OverrideText;
         }
     }

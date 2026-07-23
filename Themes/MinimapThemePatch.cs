@@ -31,11 +31,9 @@ public static class MinimapThemePatch
 
     private static void ApplyToMap(MapBehaviour map)
     {
-        var bg = map.GetComponent<UnityEngine.UI.Image>();
-        if (bg != null) bg.color = OverrideBackground;
+        if (map.ColorControl != null)
+            map.ColorControl.SetColor(OverrideBackground);
 
-        // MapVent got removed/renamed in 2025.10.14 so we just tint any
-        // SpriteRenderers on children tagged as vents - bit broad but works
         foreach (var sr in map.GetComponentsInChildren<SpriteRenderer>(true))
         {
             if (sr.gameObject.name.Contains("Vent", System.StringComparison.OrdinalIgnoreCase))
