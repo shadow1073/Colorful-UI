@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ColorfulUI.Settings;
 using HarmonyLib;
 
 namespace ColorfulUI;
 
-// host word filter - auto kicks players who say banned words in chat I don't think no one will use this tho
+// host word filter - auto kicks players who say banned words in chat 
 // words stored in ColorfulUI_WordFilter.txt, one per line
 // kicks get logged to kick history too
 public static class WordFilter
@@ -58,6 +59,9 @@ public static class WordFilter
     {
         static void Prefix(PlayerControl sourcePlayer, string chatText)
         {
+            // respect the config toggle - was ignoring it before, filter ran
+            // regardless of whether the setting was on or off lol
+            if (!ColorfulConfig.WordFilterEnabled.Value) return;
             if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
             if (sourcePlayer == null || sourcePlayer == PlayerControl.LocalPlayer) return;
 

@@ -3,11 +3,6 @@ using TMPro;
 
 namespace ColorfulUI;
 
-// sets a custom display title in the lobby screen.
-// GameRoomName and GetGameCode() are both gone in 2025.10.14 so we
-// just find the TMP by crawling children and only touch it when
-// there's actually a custom title to show - if title is empty we
-// restore whatever the game originally had there.
 public static class LobbyTitle
 {
     private static string _title = "";
@@ -58,6 +53,11 @@ public static class LobbyTitle
     [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.Update))]
     private static class UpdatePatch
     {
-        static void Postfix() => Apply();
+        static void Postfix()
+        {
+            // no custom title set, nothing to override - skip the child scan
+            if (string.IsNullOrEmpty(_title)) return;
+            Apply();
+        }
     }
 }

@@ -29,7 +29,10 @@ public static class AutoStart
 
         int count = AmongUsClient.Instance.allClients.Count;
         if (count < _target) return;
-        
+
+        // StartButton is the field on GameStartManager, ReceiveClickDown triggers
+        // it the same way tapping it does - was commented out before bc nobody
+        // actually checked what the field was called lol
         if (GameStartManager.Instance != null)
             GameStartManager.Instance.StartButton.ReceiveClickDown();
 
