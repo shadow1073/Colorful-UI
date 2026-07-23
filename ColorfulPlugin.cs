@@ -10,7 +10,6 @@ using HarmonyLib;
 namespace ColorfulUI;
 
 [BepInPlugin(Id, Name, Version)]
-[BepInProcess("Among Us.exe")]
 public sealed class ColorfulPlugin : BasePlugin
 {
     public const string Id = "starlight.colorfului";

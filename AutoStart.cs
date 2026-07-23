@@ -25,18 +25,15 @@ public static class AutoStart
     {
         if (!IsArmed) return;
         if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
-        if (LobbyBehaviour.Instance == null) return; // not in lobby
+        if (LobbyBehaviour.Instance == null) return;
 
         int count = AmongUsClient.Instance.allClients.Count;
         if (count < _target) return;
+        
+        if (GameStartManager.Instance != null)
+            GameStartManager.Instance.StartButton.ReceiveClickDown();
 
-        // TODO: startButton isn't the real field name on GameStartManager -
-        // need to confirm the actual name before this can work. left
-        // disabled so the rest of the file still builds.
-        // if (GameStartManager.Instance != null)
-        //     GameStartManager.Instance.startButton.ReceiveClickDown();
-
-        _target = 0; // disarm so it doesnt fire again
+        _target = 0; // disarm so it doesn't fire again
     }
 
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnPlayerJoined))]
