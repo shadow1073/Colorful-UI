@@ -36,16 +36,27 @@ jobs:
       - name: Build
         run: dotnet build -c Release --no-restore
 
+      - name: Collect DLL + source
+        run: |
+          mkdir -p package
+          cp bin/Release/net6.0/ColorfulUI.dll package/
+          find . -name "*.cs" -not -path "./bin/*" -not -path "./obj/*" \
+            -exec cp --parents {} package/ \;
+          cd package && zip -r ../ColorfulUI-dll-and-source.zip . && cd ..
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ColorfulUI
-          path: bin/Release/net6.0/ColorfulUI.dll
+          path: |
+            bin/Release/net6.0/ColorfulUI.dll
+            ColorfulUI-dll-and-source.zip
           if-no-files-found: error
 
-      - name: Attach DLL to release
+      - name: Attach files to release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: bin/Release/net6.0/ColorfulUI.dll
-          
+          files: |
+            bin/Release/net6.0/ColorfulUI.dll
+            ColorfulUI-dll-and-source.zip
